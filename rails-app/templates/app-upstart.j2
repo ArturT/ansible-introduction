@@ -1,0 +1,18 @@
+# {{app_name}}
+
+description "{{app_name}} server"
+author "Piotrek Bator <piotrek@nibynic.com>"
+
+start on started networking
+
+respawn
+respawn limit 10 5
+#oom never
+
+chdir /home/{{app_name}}/application/current/
+setuid {{app_name}}
+setgid {{app_name}}
+
+pre-start exec unicorn -D -E production -c /etc/unicorn/{{app_name}}.rb --env production
+
+post-stop exec kill `cat /home/{{app_name}}/application/shared/tmp/pids/unicorn.pid`

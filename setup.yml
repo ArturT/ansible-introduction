@@ -6,3 +6,4 @@
     - webserver
     - ruby
     - { name: "postgres", user_name: "ansible_demo", database_name: "ansible_demo" }
+    - { name: "rails-app", app_name: "ansible_demo", domain: "ansible_demo.dev" }

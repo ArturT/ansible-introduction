@@ -1,0 +1,49 @@
+---
+- name: "Install rack"
+  gem: name=rack version=2.0.1 state=present user_install=no
+
+- name: "Install basic gems"
+  gem: name={{item}} state=present user_install=no
+  with_items:
+    - bundler
+    - unicorn
+
+- name: "Create user"
+  user: name={{app_name}} state=present shell=/bin/bash
+
+- name: "Add my SSH key"
+  authorized_key: 'user={{app_name}} key="{{item}}"'
+  with_file: ~/.ssh/id_rsa.pub
+
+- name: Allow app user to restart app
+  lineinfile: "dest=/etc/sudoers state=present line='{{app_name}} ALL=(ALL) NOPASSWD: /usr/bin/service {{app_name}} *'"
+
+- name: "Create app directories"
+  file: path=/home/{{app_name}}/application/{{item}} state=directory owner={{app_name}} group={{app_name}}
+  with_items:
+    - shared/config
+    - shared/tmp/pids
+    - shared/log
+
+- name: "Create config files"
+  template: src={{item}}.j2 dest=/home/{{app_name}}/application/shared/config/{{item}} owner={{app_name}} group={{app_name}}
+  with_items:
+    - database.yml
+    - secrets.yml
+
+- name: "Prepare unicorn configuration directory"
+  file: dest=/etc/unicorn/ state=directory
+
+- name: "Configure unicorn"
+  template: src=unicorn.rb.j2 dest=/etc/unicorn/{{app_name}}.rb
+
+- name: "Create app upstart script"
+  template: src=app-upstart.j2 dest=/etc/init/{{app_name}}.conf mode=755
+
+- name: "Configure app site"
+  template: src=nginx.j2 dest=/etc/nginx/sites-available/{{app_name}} owner=root group=root backup=true
+  notify: reload nginx
+
+- name: "Activate app site configuration"
+  file: path=/etc/nginx/sites-enabled/{{app_name}} src=/etc/nginx/sites-available/{{app_name}} state=link
+  notify: reload nginx
