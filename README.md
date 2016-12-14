@@ -12,3 +12,7 @@ Get into machine:
 
     $ vagrant up
     $ ssh vagrant@192.168.33.10
+
+# Ansible playbook
+
+    $ ansible-playbook -i inventory setup.yml
