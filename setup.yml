@@ -5,3 +5,4 @@
   roles:
     - webserver
     - ruby
+    - { name: "postgres", user_name: "ansible_demo", database_name: "ansible_demo" }
